@@ -56,7 +56,7 @@
 <body>
     <div class="container">
         <h1>Meep's Timestamp Generator</h1>
-        <form action="#" onsubmit="ParseDate()">
+        <form action="#" onsubmit="ParseDate(event)">
             <input type="text" id="nl_input">
             <button type="submit">gimme</button>
         </form>
@@ -98,7 +98,8 @@
             }
         });
         window.chrono = gw2chrono;
-        window.ParseDate = function() {
+        window.ParseDate = function(event) {
+            event.preventDefault();
             let inputElement = document.querySelector('#nl_input');
             let input = inputElement.value;
             if (!input) {
