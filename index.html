@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Discord Timestamp</title>
+    <style>
+        * {
+            background-color: #424549;
+            color: whitesmoke;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1em;
+        }
+
+        .container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2em;
+        }
+
+        form {
+            margin-bottom: 1.5em;
+            width: 100%;
+            text-align: center;
+        }
+
+        table {
+            place-self: center;
+            text-align: left;
+        }
+
+        table tr th {
+            font-style: bold;
+        }
+
+        table tr td:first-child {
+            font-family: 'Courier New', Courier, monospace;
+            padding-right: 15px;
+        }
+
+        input {
+            border: 2px solid whitesmoke;
+            border-radius: 5px;
+            width: 80%;
+        }
+
+        input.error {
+            border: 2px solid red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Meep's Timestamp Generator</h1>
+        <form action="#" onsubmit="ParseDate()">
+            <input type="text" id="nl_input">
+            <button type="submit">gimme</button>
+        </form>
+        <table style="visibility: hidden;">
+            <tr><th>Discord timestamp</th><th>Preview</th></tr>
+            <tr><td id="fullest_date_and_time">&nbsp;</td><td id="fullest_date_and_time_preview">&nbsp;</td></tr>
+            <tr><td id="full_date_and_time">&nbsp;</td><td id="full_date_and_time_preview">&nbsp;</td></tr>
+            <tr><td id="full_date">&nbsp;</td><td id="full_date_preview">&nbsp;</td></tr>
+            <tr><td id="date">&nbsp;</td><td id="date_preview">&nbsp;</td></tr>
+            <tr><td id="full_time">&nbsp;</td><td id="full_time_preview">&nbsp;</td></tr>
+            <tr><td id="time">&nbsp;</td><td id="time_preview">&nbsp;</td></tr>
+            <tr><td id="relative">&nbsp;</td><td id="relative_preview">&nbsp;</td></tr>
+        </table>
+    </div>
+    <script type="module">
+        import * as chrono from 'https://cdn.skypack.dev/pin/chrono-node@v2.7.8-UQkOHd9sDkNBvnoye7kk/mode=imports/optimized/chrono-node.js';
+        const gw2chrono = chrono.casual.clone();
+        gw2chrono.parsers.push({
+            pattern: () => { return /\breset(\s?([+-]\s?\d+[\.,]?\d*))?\s?h?\b/ },
+            extract: (context, match) => {
+                var modText = match.at(-1);
+                if (modText !== null && modText !== undefined)
+                    modText = modText.replace(' ', '').replace('h', '').replace('H', '');
+                else
+                    modText = '0';
+                var modifier = Number.parseFloat(modText);
+                
+                var time = new Date();
+                time.setTime(context.refDate.getTime())
+                time.setUTCHours(0,0,0,0);
+                time.setTime(time.getTime() + (24 * 60 * 60 * 1000)); // add one day (usually reset is NEXT reset)
+                time.setTime(time.getTime() + (modifier * 60 * 60 * 1000)); // add modifier
+                let result = {
+                    hour: time.getHours(),
+                    minute: time.getMinutes(),
+                    second: time.getSeconds()
+                };
+                return result;
+            }
+        });
+        window.chrono = gw2chrono;
+        window.ParseDate = function() {
+            let inputElement = document.querySelector('#nl_input');
+            let input = inputElement.value;
+            if (!input) {
+                inputElement.value = placeholders[placeholderIndex];
+                input = placeholders[placeholderIndex];
+            }
+            let result = gw2chrono.parseDate(input);
+            if (!result) {
+                result = new Date();
+                document.querySelector('#nl_input').classList.add('error');
+                document.querySelector('table').style.visibility = 'hidden';
+            }
+            else {
+                document.querySelector('#nl_input').classList.remove('error');
+                document.querySelector('table').style.visibility = 'visible';
+            }
+            let discordTime = result.getTime() - 1000;
+            document.querySelector('#fullest_date_and_time').textContent = '<t:' + discordTime + ':F>';
+            document.querySelector('#full_date_and_time').textContent = '<t:' + discordTime + ':f>';
+            document.querySelector('#full_date').textContent = '<t:' + discordTime + ':D>';
+            document.querySelector('#date').textContent = '<t:' + discordTime + ':d>';
+            document.querySelector('#full_time').textContent = '<t:' + discordTime + ':T>';
+            document.querySelector('#time').textContent = '<t:' + discordTime + ':t>';
+            document.querySelector('#relative').textContent = '<t:' + discordTime + ':R>';
+
+            document.querySelector('#fullest_date_and_time_preview').textContent = new Intl.DateTimeFormat(navigator.languages, { dateStyle: 'full', timeStyle: 'long' }).format(result);
+            document.querySelector('#full_date_and_time_preview').textContent = new Intl.DateTimeFormat(navigator.languages, { dateStyle: 'long', timeStyle: 'long' }).format(result);
+            document.querySelector('#full_date_preview').textContent = new Intl.DateTimeFormat(navigator.languages, { dateStyle: 'long' }).format(result);
+            document.querySelector('#date_preview').textContent = new Intl.DateTimeFormat(navigator.languages, { dateStyle: 'short' }).format(result);
+            document.querySelector('#full_time_preview').textContent = new Intl.DateTimeFormat(navigator.languages, { timeStyle: 'long' }).format(result);
+            document.querySelector('#time_preview').textContent = new Intl.DateTimeFormat(navigator.languages, { timeStyle: 'short' }).format(result);
+
+            let diff = (result.getTime() - (new Date().getTime())) / 1000;
+            let relativeFormat = '';
+            let absoluteDiff = Math.abs(diff);
+            if (absoluteDiff >= 0 && absoluteDiff < 60) {
+                relativeFormat = 'second';
+            } else if (absoluteDiff >= 60 && absoluteDiff < 60* 60) {
+                relativeFormat = 'minute';
+                diff /= 60;
+            } else if (absoluteDiff >= 60 * 60 && absoluteDiff < 60*60*24) {
+                relativeFormat = 'hour';
+                diff /= 60*60;
+            } else if (absoluteDiff >= 60*60*24 && absoluteDiff < 60*60*24*7) {
+                relativeFormat = 'day';
+                diff /= 60*60*24;
+            } else if (absoluteDiff >= 60*60*24*7 && absoluteDiff < 60*60*24*28) {
+                relativeFormat = 'week';
+                diff /= 60*60*24*7;
+            } else if (absoluteDiff >= 60*60*24*28 && absoluteDiff < 60*60*24*365) {
+                relativeFormat = 'month';
+                diff /= 60*60*24*28;
+            } else {
+                relativeFormat = 'year';
+                diff /= 60*60*24*365;
+            }
+            diff = Math.round(diff);
+            document.querySelector('#relative_preview').textContent = new Intl.RelativeTimeFormat(navigator.languages, { numeric: 'auto' }).format(diff, relativeFormat);
+        };
+
+        const placeholders = ['tomorrow at reset+1.5', 'this saturday at 5PM EST', '2 hours from now', 'Dec 25th at midnight', 'next thursday at 1AM PDT']
+        let placeholderIndex = -1;
+        function UpdatePlaceholder() {
+            placeholderIndex += 1;
+            placeholderIndex %= placeholders.length;
+            document.querySelector("#nl_input").placeholder = placeholders[placeholderIndex];
+        }
+        UpdatePlaceholder();
+        setInterval(UpdatePlaceholder, 5000);
+    </script>
+</body>
+</html>
