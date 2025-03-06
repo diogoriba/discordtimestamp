@@ -125,7 +125,7 @@
                 document.querySelector('#nl_input').classList.remove('error');
                 document.querySelector('table').style.visibility = 'visible';
             }
-            let discordTime = result.getTime() - 1000;
+            let discordTime = Math.floor(result.getTime() / 1000.0);
             document.querySelector('#fullest_date_and_time').textContent = '<t:' + discordTime + ':F>';
             document.querySelector('#full_date_and_time').textContent = '<t:' + discordTime + ':f>';
             document.querySelector('#full_date').textContent = '<t:' + discordTime + ':D>';
