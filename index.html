@@ -75,6 +75,7 @@
             width: 0px;
         }
     </style>
+    <script src="./chrono.js"></script>
 </head>
 <body>
     <div class="container">
@@ -94,8 +95,7 @@
             <tr><td id="relative">&nbsp;</td><td id="relative_preview">&nbsp;</td></tr>
         </table>
     </div>
-    <script type="module">
-        import * as chrono from 'https://cdn.skypack.dev/pin/chrono-node@v2.7.8-UQkOHd9sDkNBvnoye7kk/mode=imports/optimized/chrono-node.js';
+    <script>
         const gw2chrono = chrono.casual.clone();
         gw2chrono.parsers.push({
             pattern: () => { return /\breset(\s?([+-]\s?\d+[\.,]?\d*))?\s?h?\b/ },
@@ -219,17 +219,6 @@
             }
         }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlTime = urlParams.get('time');
-        CheckURLParams(urlTime);
-
-        window.addEventListener('popstate', (e) => {
-            if(e.state){
-                var urlTime = Number.parseInt(e.state.time);
-                CheckURLParams(e.state.time);
-            }
-        });
-
         window.Copy = function(event) {
             event.target.focus();
             event.target.select();
@@ -243,6 +232,17 @@
                 checkmark.style.display = 'inline-block';
             }
         }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTime = urlParams.get('time');
+        CheckURLParams(urlTime);
+
+        window.addEventListener('popstate', (e) => {
+            if(e.state){
+                var urlTime = Number.parseInt(e.state.time);
+                CheckURLParams(e.state.time);
+            }
+        });
     </script>
 </body>
 </html>
