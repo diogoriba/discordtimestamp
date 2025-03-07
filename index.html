@@ -20,6 +20,10 @@
             align-items: center;
         }
 
+        .container {
+            padding: 2em;
+        }
+
         h1 {
             text-align: center;
             font-size: 2em;
@@ -42,30 +46,40 @@
         }
 
         table tr td:first-child {
-            font-family: 'Courier New', Courier, monospace;
             padding-right: 15px;
         }
 
-        button {
+        form button {
             padding: 5px;
         }
 
-        input {
+        form input[type=text] {
             border: 2px solid whitesmoke;
             border-radius: 5px;
             width: 80%;
             padding: 5px;
         }
 
-        input.error {
+        form input.error {
             border: 2px solid red;
+        }
+
+        table input[type=text] {
+            border: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        table span {
+            position: relative;
+            left: -1.5em;
+            width: 0px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Meep's Timestamp Generator</h1>
-        <form action="#" onsubmit="ParseDate(event)">
+        <form action="#" onsubmit="ParseDate(event, true)">
             <input type="text" id="nl_input">
             <button type="submit">gimme</button>
         </form>
@@ -106,8 +120,9 @@
                 return result;
             }
         });
+        window.lastInput = '';
         window.chrono = gw2chrono;
-        window.ParseDate = function(event) {
+        window.ParseDate = function(event, updateURL) {
             if (event)
                 event.preventDefault();
             let inputElement = document.querySelector('#nl_input');
@@ -116,7 +131,15 @@
                 inputElement.value = placeholders[placeholderIndex];
                 input = placeholders[placeholderIndex];
             }
-            let result = gw2chrono.parseDate(input);
+            let forward = true;
+            if (input === window.lastInput) {
+                forward = false;
+                window.lastInput = null;
+            }
+            else {
+                window.lastInput = input;
+            }
+            let result = gw2chrono.parseDate(input, Date.now, { forwardDate: forward });
             if (!result) {
                 result = new Date();
                 document.querySelector('#nl_input').classList.add('error');
@@ -127,13 +150,13 @@
                 document.querySelector('table').style.visibility = 'visible';
             }
             let discordTime = Math.floor(result.getTime() / 1000.0);
-            document.querySelector('#fullest_date_and_time').textContent = '<t:' + discordTime + ':F>';
-            document.querySelector('#full_date_and_time').textContent = '<t:' + discordTime + ':f>';
-            document.querySelector('#full_date').textContent = '<t:' + discordTime + ':D>';
-            document.querySelector('#date').textContent = '<t:' + discordTime + ':d>';
-            document.querySelector('#full_time').textContent = '<t:' + discordTime + ':T>';
-            document.querySelector('#time').textContent = '<t:' + discordTime + ':t>';
-            document.querySelector('#relative').textContent = '<t:' + discordTime + ':R>';
+            document.querySelector('#fullest_date_and_time').innerHTML = '<span style="display: none;">✅</span><input type="text" value="\<t:' + discordTime + ':F\>" onclick="Copy(event)">';
+            document.querySelector('#full_date_and_time').innerHTML = '<span style="display: none;">✅</span><input type="text" value="\<t:' + discordTime + ':f\>" onclick="Copy(event)">';
+            document.querySelector('#full_date').innerHTML = '<span style="display: none;">✅</span><input type="text" value="\<t:' + discordTime + ':D\>" onclick="Copy(event)">';
+            document.querySelector('#date').innerHTML = '<span style="display: none;">✅</span><input type="text" value="\<t:' + discordTime + ':d\>" onclick="Copy(event)">';
+            document.querySelector('#full_time').innerHTML = '<span style="display: none;">✅</span><input type="text" value="\<t:' + discordTime + ':T\>" onclick="Copy(event)">';
+            document.querySelector('#time').innerHTML = '<span style="display: none;">✅</span><input type="text" value="\<t:' + discordTime + ':t\>" onclick="Copy(event)">';
+            document.querySelector('#relative').innerHTML = '<span style="display: none;">✅</span><input type="text" value="\<t:' + discordTime + ':R\>" onclick="Copy(event)">';
 
             document.querySelector('#fullest_date_and_time_preview').textContent = new Intl.DateTimeFormat(navigator.languages, { dateStyle: 'full', timeStyle: 'long' }).format(result);
             document.querySelector('#full_date_and_time_preview').textContent = new Intl.DateTimeFormat(navigator.languages, { dateStyle: 'long', timeStyle: 'long' }).format(result);
@@ -169,8 +192,10 @@
             diff = Math.round(diff);
             document.querySelector('#relative_preview').textContent = new Intl.RelativeTimeFormat(navigator.languages, { numeric: 'auto' }).format(diff, relativeFormat);
             
-            var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?time=' + discordTime;
-            window.history.pushState({time: discordTime}, '', newurl);
+            if (updateURL) {
+                var newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?time=' + discordTime;
+                window.history.pushState({time: discordTime}, '', newurl);
+            }
         };
 
         const placeholders = ['tomorrow at reset+1.5', 'this saturday at 5PM EST', '2 hours from now', 'Dec 25th at midnight', 'next thursday at 1AM PDT']
@@ -178,7 +203,7 @@
         function UpdatePlaceholder() {
             placeholderIndex += 1;
             placeholderIndex %= placeholders.length;
-            document.querySelector("#nl_input").placeholder = placeholders[placeholderIndex];
+            document.querySelector('#nl_input').placeholder = placeholders[placeholderIndex];
         }
         UpdatePlaceholder();
         setInterval(UpdatePlaceholder, 5000);
@@ -197,6 +222,27 @@
         const urlParams = new URLSearchParams(window.location.search);
         const urlTime = urlParams.get('time');
         CheckURLParams(urlTime);
+
+        window.addEventListener('popstate', (e) => {
+            if(e.state){
+                var urlTime = Number.parseInt(e.state.time);
+                CheckURLParams(e.state.time);
+            }
+        });
+
+        window.Copy = function(event) {
+            event.target.focus();
+            event.target.select();
+            let text = event.target.value;
+            let checkmark = event.target.previousElementSibling;
+            document.querySelectorAll('table span').forEach(check => check.style.display = 'none');
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => checkmark.style.display = 'inline-block');
+            } else {
+                document.execCommand('copy')
+                checkmark.style.display = 'inline-block';
+            }
+        }
     </script>
 </body>
 </html>
