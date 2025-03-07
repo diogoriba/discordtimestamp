@@ -98,7 +98,7 @@
     <script>
         const gw2chrono = chrono.casual.clone();
         gw2chrono.parsers.push({
-            pattern: () => { return /\br(eset)?(\s?([+-]\s?\d+[\.,]?\d*))?\s?h?\b/ },
+            pattern: () => { return /\br(eset)?(\s?([+-]\s?\d+[\.,]?\d*))?\s?h?\b/i },
             extract: (context, match) => {
                 var modText = match.at(-1);
                 if (modText !== null && modText !== undefined)
