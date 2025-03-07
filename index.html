@@ -97,21 +97,32 @@
     </div>
     <script>
         const gw2chrono = chrono.casual.clone();
-        gw2chrono.parsers.push({
-            pattern: () => { return /\br(eset)?(\s?([+-]\s?\d+[\.,]?\d*))?\s?h?\b/i },
-            extract: (context, match) => {
-                var modText = match.at(-1);
+        function AdjustReset(input, date) {
+            let resetRegex = /\br(eset)?(\s?([+-]\s?\d+[\.,]?\d*))?\s?h?\b/i;
+            let match = input.match(resetRegex);
+            if (match) {
+                let modText = match.at(-1);
                 if (modText !== null && modText !== undefined)
                     modText = modText.replace(' ', '').replace('h', '').replace('H', '');
                 else
                     modText = '0';
-                var modifier = Number.parseFloat(modText);
-                
-                var time = new Date();
-                time.setTime(context.refDate.getTime())
-                time.setUTCHours(0,0,0,0);
-                time.setTime(time.getTime() + (24 * 60 * 60 * 1000)); // add one day (usually reset is NEXT reset)
-                time.setTime(time.getTime() + (modifier * 60 * 60 * 1000)); // add modifier
+                let modifier = Number.parseFloat(modText);
+
+                let resetTime = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
+                let time = new Date(date);
+                time.setHours(resetTime.getHours());
+                time.setMinutes(resetTime.getMinutes());
+                time.setSeconds(resetTime.getSeconds());
+                time.setMilliseconds(0);
+                time.setTime(time.getTime() + (modifier * 60 * 60 * 1000));
+                return time;
+            }
+            return date;
+        }
+        gw2chrono.parsers.push({
+            pattern: () => { return /\br(eset)?(\s?([+-]\s?\d+[\.,]?\d*))?\s?h?\b/i },
+            extract: (context, match) => {
+                let time = AdjustReset(context.text, context.refDate);
                 let result = {
                     hour: time.getHours(),
                     minute: time.getMinutes(),
@@ -140,6 +151,7 @@
                 window.lastInput = input;
             }
             let result = gw2chrono.parseDate(input, Date.now, { forwardDate: forward });
+            result = AdjustReset(input, result);
             if (!result) {
                 result = new Date();
                 document.querySelector('#nl_input').classList.add('error');
