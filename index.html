@@ -108,7 +108,8 @@
         });
         window.chrono = gw2chrono;
         window.ParseDate = function(event) {
-            event.preventDefault();
+            if (event)
+                event.preventDefault();
             let inputElement = document.querySelector('#nl_input');
             let input = inputElement.value;
             if (!input) {
@@ -167,6 +168,9 @@
             }
             diff = Math.round(diff);
             document.querySelector('#relative_preview').textContent = new Intl.RelativeTimeFormat(navigator.languages, { numeric: 'auto' }).format(diff, relativeFormat);
+            
+            var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?time=' + discordTime;
+            window.history.pushState({time: discordTime}, '', newurl);
         };
 
         const placeholders = ['tomorrow at reset+1.5', 'this saturday at 5PM EST', '2 hours from now', 'Dec 25th at midnight', 'next thursday at 1AM PDT']
@@ -178,6 +182,21 @@
         }
         UpdatePlaceholder();
         setInterval(UpdatePlaceholder, 5000);
+
+        function CheckURLParams(time) {
+            if (time) {
+                var dateNumber = Number.parseInt(time) * 1000;
+                var date = new Date();
+                date.setTime(dateNumber);
+                let inputElement = document.querySelector('#nl_input');
+                inputElement.value = date.toISOString();
+                window.ParseDate();
+            }
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTime = urlParams.get('time');
+        CheckURLParams(urlTime);
     </script>
 </body>
 </html>
