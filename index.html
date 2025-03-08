@@ -131,7 +131,6 @@
                 return result;
             }
         });
-        window.lastInput = '';
         window.chrono = gw2chrono;
         window.ParseDate = function(event, updateURL) {
             if (event)
@@ -142,15 +141,7 @@
                 inputElement.value = placeholders[placeholderIndex];
                 input = placeholders[placeholderIndex];
             }
-            let forward = true;
-            if (input === window.lastInput) {
-                forward = false;
-                window.lastInput = null;
-            }
-            else {
-                window.lastInput = input;
-            }
-            let result = gw2chrono.parseDate(input, Date.now, { forwardDate: forward });
+            let result = gw2chrono.parseDate(input, Date.now, { forwardDate: true });
             result = AdjustReset(input, result);
             if (!result) {
                 result = new Date();
