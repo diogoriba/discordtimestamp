@@ -151,6 +151,7 @@
                 input = placeholders[placeholderIndex];
             }
             let result = gw2chrono.parseDate(input, Date.now, { forwardDate: true });
+            let success = false;
             result = AdjustReset(input, result);
             if (!result) {
                 result = new Date();
@@ -158,6 +159,7 @@
                 document.querySelector('table').style.visibility = 'hidden';
             }
             else {
+                success = true;
                 document.querySelector('#nl_input').classList.remove('error');
                 document.querySelector('table').style.visibility = 'visible';
             }
@@ -204,9 +206,13 @@
             diff = Math.round(diff);
             document.querySelector('#relative_preview').textContent = new Intl.RelativeTimeFormat(navigator.languages, { numeric: 'auto' }).format(diff, relativeFormat);
             
-            if (updateURL) {
+            if (success && updateURL) {
                 var newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?time=' + discordTime;
                 window.history.pushState({time: discordTime}, '', newurl);
+            }
+            else {
+                var newurl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+                window.history.pushState({}, '', newurl);
             }
         };
 
