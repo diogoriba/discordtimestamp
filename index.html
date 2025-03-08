@@ -97,8 +97,8 @@
     </div>
     <script>
         const gw2chrono = chrono.casual.clone();
+        let resetRegex = /\br(eset)?(\s?([+-]\s?\d+[\.,]?\d*))?\s?h?\b/i;
         function AdjustReset(input, date) {
-            let resetRegex = /\br(eset)?(\s?([+-]\s?\d+[\.,]?\d*))?\s?h?\b/i;
             let match = input.match(resetRegex);
             if (match) {
                 let modText = match.at(-1);
@@ -120,7 +120,7 @@
             return date;
         }
         gw2chrono.parsers.push({
-            pattern: () => { return /\br(eset)?(\s?([+-]\s?\d+[\.,]?\d*))?\s?h?\b/i },
+            pattern: () => { return resetRegex },
             extract: (context, match) => {
                 let time = AdjustReset(context.text, context.refDate);
                 let result = {
