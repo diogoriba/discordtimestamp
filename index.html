@@ -131,6 +131,15 @@
                 return result;
             }
         });
+        gw2chrono.parsers.push({
+            pattern: () => { return /\bvip(\'s)? birthday\b/i; },
+            extract: (context, match) => {
+                return {
+                    day: 2,
+                    month: 8
+                };
+            }
+        });
         window.chrono = gw2chrono;
         window.ParseDate = function(event, updateURL) {
             if (event)
